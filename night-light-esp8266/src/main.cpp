@@ -47,7 +47,8 @@ void saveWifiInfo(uint8_t wifiWork, char sta_ssid[32], char sta_password[64]);
 void EEPROMUpdate(int const address, uint8_t const value); // wifi part
 const uint8_t EEPROM_SIZE = 128;
 
-void publishLightState();
+IRAM_ATTR void publishLightState();
+IRAM_ATTR void ButtonControl();
 void publishLightBrightness();
 void callback(char *p_topic, byte *p_payload, unsigned int p_length);
 void connectToMQTT();
@@ -71,7 +72,7 @@ const PROGMEM char *MQTT_LIGHT_BRIGHTNESS_COMMAND_TOPIC = "bedroom/brightness/se
 // sleep mode
 // not finied yet
 
-boolean light_state = false;
+volatile boolean light_state = false;
 uint8_t light_brightness = 100;
 // variables used to store the state and the brightness
 const uint8_t MSG_BUFFER_SIZE = 20;
@@ -81,8 +82,10 @@ const PROGMEM char *LIGHT_ON = "ON";
 const PROGMEM char *LIGHT_OFF = "OFF";
 // payloads by default (on/off)
 #define LIGHT_PIN 0
-
-// light pin
+#define BUTTON_PIN 2
+// light pin & BUTTON_PIN
+volatile boolean light_button_delay = false;
+volatile long button_delay_time = 0;
 
 WiFiClient wifiClient;
 PubSubClient client(wifiClient);
@@ -95,6 +98,9 @@ void setup(void)
   Serial.begin(9600);
   EEPROM.begin(EEPROM_SIZE);
   Serial.println();
+
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), ButtonControl, FALLING);
 
   if (EEPROM.read(0) != 1)
   {
@@ -261,17 +267,17 @@ void EEPROMUpdate(int const address, uint8_t const value)
   }
 }
 
-void publishLightState()
+IRAM_ATTR void publishLightState()
 {
   if (light_state)
   { // function called to publish the state of the led (on/off)
     client.publish(MQTT_LIGHT_STATE_TOPIC, LIGHT_ON, true);
-    digitalWrite(LIGHT_PIN, 1);
+    digitalWrite(LIGHT_PIN, 0);
   }
   else
   {
     client.publish(MQTT_LIGHT_STATE_TOPIC, LIGHT_OFF, true);
-    digitalWrite(LIGHT_PIN, 0);
+    digitalWrite(LIGHT_PIN, 1);
   }
 }
 
@@ -364,6 +370,15 @@ void setBrightness()
 {
   if (light_state)
   {
-    analogWrite(LIGHT_PIN, map(light_brightness, 0, 100, 0, 255));
+    analogWrite(LIGHT_PIN, map((100 - light_brightness), 0, 100, 0, 255));
+  }
+}
+
+IRAM_ATTR void ButtonControl()
+{
+  if((millis() - button_delay_time) > 200){
+    button_delay_time = millis();
+    light_state = !light_state;
+    publishLightState();
   }
 }
