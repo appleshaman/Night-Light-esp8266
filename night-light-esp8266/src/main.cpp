@@ -86,6 +86,7 @@ const PROGMEM char *LIGHT_OFF = "OFF";
 // light pin & BUTTON_PIN
 volatile boolean light_button_delay = false;
 volatile long button_delay_time = 0;
+#define Debouncing_delay 200
 
 WiFiClient wifiClient;
 PubSubClient client(wifiClient);
@@ -376,7 +377,7 @@ void setBrightness()
 
 IRAM_ATTR void ButtonControl()
 {
-  if((millis() - button_delay_time) > 200){
+  if((millis() - button_delay_time) > Debouncing_delay){
     button_delay_time = millis();
     light_state = !light_state;
     publishLightState();
