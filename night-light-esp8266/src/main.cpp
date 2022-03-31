@@ -55,6 +55,11 @@ void connectToMQTT();
 void setBrightness();
 unsigned long reconnectTime = 0;
 
+void breathingWhileConnecting();
+byte brightnessForBreathing = 0;
+bool acsendOrDecend = false;
+void blink(int speed);
+
 const PROGMEM char *MQTT_CLIENT_ID = "bedroom_night_light";
 const PROGMEM char *MQTT_SERVER_IP = "192.168.31.128";
 const PROGMEM uint16_t MQTT_SERVER_PORT = 1883;
@@ -96,6 +101,8 @@ ESP8266WebServer server(80);
 void setup(void)
 {
   pinMode(LIGHT_PIN, OUTPUT);
+  digitalWrite(LIGHT_PIN, 1);
+
   Serial.begin(9600);
   EEPROM.begin(EEPROM_SIZE);
   Serial.println();
@@ -123,10 +130,19 @@ void setup(void)
 void loop(void)
 {
   server.handleClient();
-  if (!client.connected())
+  if (WiFi.status() == WL_CONNECTED)
   {
-    connectToMQTT();
+    if (!client.connected())
+    {
+      connectToMQTT();
+    }
   }
+  else
+  {
+    //connectToWifi();
+  }
+  //breathingWhileConnecting();
+  delay(100);
   client.loop();
 }
 
@@ -155,10 +171,11 @@ void connectToWifi()
   int waittingTime = 0;
   while (WiFi.status() != WL_CONNECTED)
   {
-    delay(500);
+    delay(100);
     waittingTime++;
     Serial.print(".");
-    if (waittingTime >= 40)
+    breathingWhileConnecting();
+    if (waittingTime >= 1000)
     {
       waittingTime = 0;
       EEPROMUpdate(0, 0); // set wifi as not available
@@ -166,6 +183,7 @@ void connectToWifi()
       ESP.restart();
     }
   }
+  digitalWrite(LIGHT_PIN, 1);
 }
 
 void handleRootPost()
@@ -273,7 +291,7 @@ IRAM_ATTR void publishLightState()
   if (light_state)
   { // function called to publish the state of the led (on/off)
     client.publish(MQTT_LIGHT_STATE_TOPIC, LIGHT_ON, true);
-    digitalWrite(LIGHT_PIN, 0);
+    setBrightness();
   }
   else
   {
@@ -321,6 +339,7 @@ void connectToMQTT()
         Serial.println(client.state());
         Serial.println("reconnect in 3 seconds");
         reconnectTime = millis();
+        //blink(200);
       }
     }
   }
@@ -377,9 +396,38 @@ void setBrightness()
 
 IRAM_ATTR void ButtonControl()
 {
-  if((millis() - button_delay_time) > Debouncing_delay){
+  if ((millis() - button_delay_time) > Debouncing_delay)
+  {
     button_delay_time = millis();
     light_state = !light_state;
     publishLightState();
   }
+}
+
+void breathingWhileConnecting()
+{
+  if ((brightnessForBreathing == 100) || (brightnessForBreathing == 0))
+  {
+    acsendOrDecend = !acsendOrDecend;
+  }
+
+  analogWrite(LIGHT_PIN, map((100 - brightnessForBreathing), 0, 100, 0, 255));
+  if (acsendOrDecend)
+  {
+    brightnessForBreathing += 10;
+    Serial.println(brightnessForBreathing);
+  }
+  else
+  {
+    brightnessForBreathing -= 10;
+    Serial.println(brightnessForBreathing);
+  }
+}
+
+void blink(int speed)
+{
+  digitalWrite(LIGHT_PIN, 0);
+  delay(speed);
+  digitalWrite(LIGHT_PIN, 1);
+  delay(speed);
 }
