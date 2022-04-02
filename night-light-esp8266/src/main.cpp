@@ -3,6 +3,7 @@
 #include <ESP8266WebServer.h>
 #include <EEPROM.h>
 #include <PubSubClient.h>
+#include <DNSServer.h>
 
 #define MQTT_VERSION MQTT_VERSION_3_1_1
 
@@ -31,16 +32,21 @@ const PROGMEM char *webpage_html = "\
 </html>\r\n\
 ";
 
+DNSServer dnsServer;
+const byte DNS_PORT = 53;
 IPAddress local_IP(192, 168, 0, 1);
 IPAddress gateway(192, 168, 0, 1);
 IPAddress subnet(255, 255, 255, 0);
+ESP8266WebServer server(80);
 
 void initApConfig();
 void initWebServer();
 void connectToWifi();
 void handleRootPost();
 void handleRoot();
-void handleNotFound(); // web part
+void handleNotFound(); 
+void initDNS();
+// web part
 
 void readWifiInfo();
 void saveWifiInfo(uint8_t wifiWork, char sta_ssid[32], char sta_password[64]);
@@ -96,7 +102,7 @@ volatile long button_delay_time = 0;
 WiFiClient wifiClient;
 PubSubClient client(wifiClient);
 
-ESP8266WebServer server(80);
+
 
 void setup(void)
 {
@@ -114,6 +120,7 @@ void setup(void)
   {
     initApConfig();
     initWebServer();
+    initDNS();
     Serial.printf("Open http://%s in your browser\n", WiFi.softAPIP().toString().c_str());
   }
   else
@@ -130,6 +137,7 @@ void setup(void)
 void loop(void)
 {
   server.handleClient();
+  dnsServer.processNextRequest();
   if (WiFi.status() == WL_CONNECTED)
   {
     if (!client.connected())
@@ -149,17 +157,22 @@ void loop(void)
 void initApConfig()
 {
   WiFi.mode(WIFI_AP);
-  WiFi.softAPConfig(local_IP, gateway, subnet);
+  WiFi.softAPConfig(local_IP, gateway, IPAddress(subnet));
   WiFi.softAP(ap_ssid, ap_password);
 }
 
 void initWebServer()
 {
   server.on("/", HTTP_GET, handleRoot);
+  server.onNotFound(handleRoot);
   server.on("/", HTTP_POST, handleRootPost);
-  server.onNotFound(handleNotFound);
-
   server.begin();
+}
+
+void initDNS(){
+  if(dnsServer.start(DNS_PORT, "*", local_IP)){
+    Serial.println("dnsServer initialated");
+  }
 }
 
 void connectToWifi()
@@ -223,8 +236,7 @@ void handleRoot()
 
 void handleNotFound()
 {
-  String message = "File Not Found\n\n";
-  server.send(404, "text/plain", message);
+  handleRoot();//still using handleRoot even not found, or the captive portal would failed
 }
 
 void saveWifiInfo(uint8_t wifiWork, char sta_ssid[32], char sta_password[64])
