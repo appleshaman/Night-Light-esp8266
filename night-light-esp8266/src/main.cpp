@@ -19,6 +19,14 @@ const PROGMEM char *webpage_html = "\
 <head>\r\n\
   <meta charset='UTF-8'>\r\n\
   <title>Document</title>\r\n\
+  <style>\r\n\
+    body {\r\n\
+      display: flex;\r\n\
+      justify-content: center;\r\n\
+      align-items: center;\r\n\
+      height: 100%;\r\n\
+    }\r\n\
+  </style>\r\n\
 </head>\r\n\
 <body>\r\n\
   <form name='input' action='/' method='POST'>\r\n\
@@ -44,7 +52,7 @@ void initWebServer();
 void connectToWifi();
 void handleRootPost();
 void handleRoot();
-void handleNotFound(); 
+void handleNotFound();
 void initDNS();
 // web part
 
@@ -102,16 +110,16 @@ volatile long button_delay_time = 0;
 WiFiClient wifiClient;
 PubSubClient client(wifiClient);
 
-
-
 void setup(void)
 {
-  pinMode(LIGHT_PIN, OUTPUT);
-  digitalWrite(LIGHT_PIN, 1);
+  pinMode(LIGHT_PIN, INPUT_PULLUP);
 
   Serial.begin(9600);
   EEPROM.begin(EEPROM_SIZE);
   Serial.println();
+
+  pinMode(LIGHT_PIN, OUTPUT);
+  digitalWrite(LIGHT_PIN, 1);
 
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), ButtonControl, FALLING);
@@ -147,9 +155,9 @@ void loop(void)
   }
   else
   {
-    //connectToWifi();
+    // connectToWifi();
   }
-  //breathingWhileConnecting();
+  // breathingWhileConnecting();
   delay(100);
   client.loop();
 }
@@ -169,8 +177,10 @@ void initWebServer()
   server.begin();
 }
 
-void initDNS(){
-  if(dnsServer.start(DNS_PORT, "*", local_IP)){
+void initDNS()
+{
+  if (dnsServer.start(DNS_PORT, "*", local_IP))
+  {
     Serial.println("dnsServer initialated");
   }
 }
@@ -236,7 +246,7 @@ void handleRoot()
 
 void handleNotFound()
 {
-  handleRoot();//still using handleRoot even not found, or the captive portal would failed
+  handleRoot(); // still using handleRoot even not found, or the captive portal would failed
 }
 
 void saveWifiInfo(uint8_t wifiWork, char sta_ssid[32], char sta_password[64])
@@ -351,7 +361,7 @@ void connectToMQTT()
         Serial.println(client.state());
         Serial.println("reconnect in 3 seconds");
         reconnectTime = millis();
-        //blink(200);
+        // blink(200);
       }
     }
   }
@@ -408,6 +418,10 @@ void setBrightness()
 
 IRAM_ATTR void ButtonControl()
 {
+  if ((millis() - button_delay_time) < 0)
+  {
+    button_delay_time = 0;
+  }
   if ((millis() - button_delay_time) > Debouncing_delay)
   {
     button_delay_time = millis();
