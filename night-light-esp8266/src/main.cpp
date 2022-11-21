@@ -75,10 +75,10 @@ bool acsendOrDecend = false;
 void blink(int speed);
 
 const PROGMEM char *MQTT_CLIENT_ID = "bedroom_night_light";
-const PROGMEM char *MQTT_SERVER_IP = "192.168.31.128";
+const PROGMEM char *MQTT_SERVER_IP = "192.168.31.178";
 const PROGMEM uint16_t MQTT_SERVER_PORT = 1883;
-const PROGMEM char *MQTT_USER = "UserOfMQTT";
-const PROGMEM char *MQTT_PASSWORD = "mqtt1234";
+const PROGMEM char *MQTT_USER = "mqtt_sender";
+const PROGMEM char *MQTT_PASSWORD = "1234";
 
 // MQTT: topics
 const PROGMEM char *MQTT_LIGHT_STATE_TOPIC = "bedroom/light/status";
@@ -92,7 +92,7 @@ const PROGMEM char *MQTT_LIGHT_BRIGHTNESS_COMMAND_TOPIC = "bedroom/brightness/se
 // not finied yet
 
 volatile boolean light_state = false;
-uint8_t light_brightness = 100;
+uint8_t light_brightness = 255;
 // variables used to store the state and the brightness
 const uint8_t MSG_BUFFER_SIZE = 20;
 char msg_buffer[MSG_BUFFER_SIZE];
@@ -324,7 +324,7 @@ IRAM_ATTR void publishLightState()
 
 void publishLightBrightness()
 {
-  // function called to publish the brightness of the led (0-100)
+  // function called to publish the brightness of the led (0-255)
   snprintf(msg_buffer, MSG_BUFFER_SIZE, "%d", light_brightness);
   client.publish(MQTT_LIGHT_BRIGHTNESS_STATE_TOPIC, msg_buffer, true);
 }
@@ -399,9 +399,10 @@ void callback(char *p_topic, byte *p_payload, unsigned int p_length)
   else if (String(MQTT_LIGHT_BRIGHTNESS_COMMAND_TOPIC).equals(p_topic))
   {
     uint8_t brightness = payload.toInt();
-    if (brightness > 0 && brightness < 100)
+    if (brightness > 0 && brightness < 255)
     {
       light_brightness = brightness;
+      Serial.println(light_brightness);
       setBrightness();
       publishLightBrightness();
     }
@@ -412,7 +413,7 @@ void setBrightness()
 {
   if (light_state)
   {
-    analogWrite(LIGHT_PIN, map((100 - light_brightness), 0, 100, 0, 255));
+    analogWrite(LIGHT_PIN, 255 - light_brightness);
   }
 }
 
@@ -432,12 +433,12 @@ IRAM_ATTR void ButtonControl()
 
 void breathingWhileConnecting()
 {
-  if ((brightnessForBreathing == 100) || (brightnessForBreathing == 0))
+  if ((brightnessForBreathing == 255) || (brightnessForBreathing == 0))
   {
     acsendOrDecend = !acsendOrDecend;
   }
 
-  analogWrite(LIGHT_PIN, map((100 - brightnessForBreathing), 0, 100, 0, 255));
+  analogWrite(LIGHT_PIN, 255 - brightnessForBreathing);
   if (acsendOrDecend)
   {
     brightnessForBreathing += 10;
