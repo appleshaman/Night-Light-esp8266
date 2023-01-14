@@ -414,6 +414,11 @@ void setBrightness()
   if (light_state)
   {
     analogWrite(LIGHT_PIN, 255 - light_brightness);
+    if (light_brightness > 242)//if brightness is over 95%. then use the digital write
+    {
+      digitalWrite(LIGHT_PIN, !light_state);
+    }
+    
   }
 }
 
