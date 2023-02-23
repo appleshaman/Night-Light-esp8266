@@ -16,6 +16,13 @@ For a total new device that has not connect to WIFI before, you will see a open 
 The WIFI details would be stored inside the EEPROM so you do not have to re-input the details if the light lost power.<br>
 The light would perform as a breathing light when it is connecting to the WIFI, if the light still could not connect to the WIFI (input wrong details, the router power is down etc.), the hotspot "nightlight" would open again and allows you re-input the details, in that case, the WIFI details stored inside would be wiped out.<br>
 In the program, there is a I/O pin (GPIO 2 for esp8266) avaliable for the external button, you can give this pin a low-level to swith the status of the light, also, the light status would be updated as well to the MQTT server.
+## Performance
+###High brightness<br>
+<img src="https://github.com/appleshaman/Night-Light-esp8266/blob/main/docs/bnh1.jpg" width="400px"><br>
+<img src="https://github.com/appleshaman/Night-Light-esp8266/blob/main/docs/bnh2.jpg" width="400px"><br>
+###Low brightness<br>
+<img src="https://github.com/appleshaman/Night-Light-esp8266/blob/main/docs/bnl1.jpg" width="400px"><br>
+<img src="https://github.com/appleshaman/Night-Light-esp8266/blob/main/docs/bnl2.jpg" width="400px"><br>
 ## Hardware Design
 I used EasyEDA designed those hardware, here is the circuit so you can design your own one.
 The circuit<br>
