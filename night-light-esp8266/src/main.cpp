@@ -74,18 +74,18 @@ byte brightnessForBreathing = 0;
 bool acsendOrDecend = false;
 void blink(int speed);
 
-const PROGMEM char *MQTT_CLIENT_ID = "bedroom_night_light";
+const PROGMEM char *MQTT_CLIENT_ID = "ESP_Bedroom_Table_Light";
 const PROGMEM char *MQTT_SERVER_IP = "192.168.31.178";
 const PROGMEM uint16_t MQTT_SERVER_PORT = 1883;
 const PROGMEM char *MQTT_USER = "mqtt_sender";
 const PROGMEM char *MQTT_PASSWORD = "1234";
 
 // MQTT: topics
-const PROGMEM char *MQTT_LIGHT_STATE_TOPIC = "bedroom/light/status";
-const PROGMEM char *MQTT_LIGHT_COMMAND_TOPIC = "bedroom/light/switch";
+const PROGMEM char *MQTT_LIGHT_STATE_TOPIC = "bedroom/tableLight/status";
+const PROGMEM char *MQTT_LIGHT_COMMAND_TOPIC = "bedroom/tableLight/switch";
 // state
-const PROGMEM char *MQTT_LIGHT_BRIGHTNESS_STATE_TOPIC = "bedroom/brightness/status";
-const PROGMEM char *MQTT_LIGHT_BRIGHTNESS_COMMAND_TOPIC = "bedroom/brightness/set";
+const PROGMEM char *MQTT_LIGHT_BRIGHTNESS_STATE_TOPIC = "bedroom/tableLight/brightness/status";
+const PROGMEM char *MQTT_LIGHT_BRIGHTNESS_COMMAND_TOPIC = "bedroom/tableLight/brightness/set";
 // brightness
 
 // sleep mode
@@ -190,6 +190,7 @@ void connectToWifi()
   WiFi.disconnect();
   WiFi.mode(WIFI_STA);
   WiFi.begin(sta_ssid, sta_password);
+  WiFi.setHostname(MQTT_CLIENT_ID);
 
   int waittingTime = 0;
   while (WiFi.status() != WL_CONNECTED)
@@ -446,12 +447,12 @@ void breathingWhileConnecting()
   analogWrite(LIGHT_PIN, 255 - brightnessForBreathing);
   if (acsendOrDecend)
   {
-    brightnessForBreathing += 10;
+    brightnessForBreathing += 5;
     Serial.println(brightnessForBreathing);
   }
   else
   {
-    brightnessForBreathing -= 10;
+    brightnessForBreathing -= 5;
     Serial.println(brightnessForBreathing);
   }
 }
