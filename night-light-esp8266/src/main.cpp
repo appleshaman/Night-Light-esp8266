@@ -74,18 +74,18 @@ byte brightnessForBreathing = 0;
 bool acsendOrDecend = false;
 void blink(int speed);
 
-const PROGMEM char *MQTT_CLIENT_ID = "ESP_Bedroom_Table_Light";
+const PROGMEM char *MQTT_CLIENT_ID = "ESP_Bedroom_Night_Light";
 const PROGMEM char *MQTT_SERVER_IP = "192.168.31.178";
 const PROGMEM uint16_t MQTT_SERVER_PORT = 1883;
 const PROGMEM char *MQTT_USER = "mqtt_sender";
 const PROGMEM char *MQTT_PASSWORD = "1234";
 
 // MQTT: topics
-const PROGMEM char *MQTT_LIGHT_STATE_TOPIC = "bedroom/tableLight/status";
-const PROGMEM char *MQTT_LIGHT_COMMAND_TOPIC = "bedroom/tableLight/switch";
+const PROGMEM char *MQTT_LIGHT_STATE_TOPIC = "bedroom/nightLight/status";
+const PROGMEM char *MQTT_LIGHT_COMMAND_TOPIC = "bedroom/nightLight/switch";
 // state
-const PROGMEM char *MQTT_LIGHT_BRIGHTNESS_STATE_TOPIC = "bedroom/tableLight/brightness/status";
-const PROGMEM char *MQTT_LIGHT_BRIGHTNESS_COMMAND_TOPIC = "bedroom/tableLight/brightness/set";
+const PROGMEM char *MQTT_LIGHT_BRIGHTNESS_STATE_TOPIC = "bedroom/nightLight/brightness/status";
+const PROGMEM char *MQTT_LIGHT_BRIGHTNESS_COMMAND_TOPIC = "bedroom/nightLight/brightness/set";
 // brightness
 
 // sleep mode
@@ -158,7 +158,7 @@ void loop(void)
     // connectToWifi();
   }
   // breathingWhileConnecting();
-  delay(100);
+  //delay(100);
   client.loop();
 }
 
